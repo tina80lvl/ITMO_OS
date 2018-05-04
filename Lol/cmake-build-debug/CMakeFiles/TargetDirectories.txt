@@ -1,0 +1,3 @@
+/Users/tina/Documents/ITMO/CT/OS/Lol/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/tina/Documents/ITMO/CT/OS/Lol/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/tina/Documents/ITMO/CT/OS/Lol/cmake-build-debug/CMakeFiles/Lol.dir

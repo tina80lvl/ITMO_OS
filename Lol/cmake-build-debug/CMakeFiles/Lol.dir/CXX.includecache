@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/Users/tina/Documents/ITMO/CT/OS/Lol/main.cpp
+sys/types.h
+-
+sys/stat.h
+-
+dirent.h
+-
+sys/wait.h
+-
+cstdio
+-
+cstring
+-
+cstdlib
+-
+unistd.h
+-
+string
+-
+
