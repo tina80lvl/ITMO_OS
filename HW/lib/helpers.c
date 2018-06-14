@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
-ssize_t read_(int fd, void *buf, size_t count) {
-    ssize_t bytesRead = 0;
+size_t read_(int fd, void *buf, size_t count) {
+    size_t bytesRead = 0;
     while (bytesRead < count) {
         ssize_t actualRead = read(fd, buf + bytesRead, count - bytesRead);
         if (actualRead == 0)
@@ -20,10 +20,10 @@ ssize_t read_(int fd, void *buf, size_t count) {
     return bytesRead;
 }
 
-ssize_t write_(int fd, void *buf, size_t count) {
-    ssize_t bytesWritten = 0;
+size_t write_(int fd, void *buf, size_t count) {
+    size_t bytesWritten = 0;
     while (bytesWritten < count) {
-        ssize_t actualWritten = write(fd, buf + bytesWritten, count - bytesWritten);
+        size_t actualWritten = write(fd, buf + bytesWritten, count - bytesWritten);
         if (actualWritten == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
             return -1;
         else if (actualWritten != -1)
@@ -65,7 +65,7 @@ size_t size(struct CharQueue* q) {
     return q->r - q->l;
 }
 
-ssize_t read_until(int fd, void * buf, size_t count, char delimiter) {
+size_t read_until(int fd, void * buf, size_t count, char delimiter) {
     if (count == 0)
         return 0;
     static struct CharQueue* q;

@@ -4,91 +4,61 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
-#include "../lib/bufio.h"
 #include <string.h>
-
-int startServer(int port) {
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == -1)
-        return -1;
-	int one = 1;
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) == -1)
-        return -1;
-	struct sockaddr_in addr = {
-		.sin_family = AF_INET,
-		.sin_port = htons(port), 
-		.sin_addr = {.s_addr = INADDR_ANY}};
-	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-        return -1;
-	if (listen(sock, 1) == -1)
-        return -1;
-    return sock;
-}
+#include <time.h>
 
 #define MAX_SIZE_BUFFER 64 * 1024
-#define MAX_SIZE_CONNECTION 1024*64
+#define MAX_SIZE_CONNECTION 1024 * 64
 
 struct buf_t* buf; 
 char str[MAX_SIZE_BUFFER + 1];
 
-void pipedWrite(int fd1, int fd2) {
-    while (1) {
-        ssize_t rb = read(fd1, str, MAX_SIZE_BUFFER);
-        if (rb <= 0) break;
-        str[rb] = '\n';
-        ssize_t bytes = write(fd2, str, rb + 1);
-    }
-    close(fd1);
-    close(fd2);
+int startServer(char home []) {
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == -1)
+        return -1;
+
+    struct sockaddr_in server_addr = {
+        .sin_family = AF_INET,
+        .sin_port = htons(8080), 
+        .sin_addr = {.s_addr = inet_addr(home)}};
+
+    if (bind(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
+        return -1;
+
+    if (listen(sock, 100) == -1)
+        return -1;
+
+    return sock;
 }
-int childs[MAX_SIZE_CONNECTION], numChild;
+
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        printf("Input 3 agruments!\n");
-        return 0;
+    if (argc != 2) {
+        printf("Usage!\n");
+        return -1;
     }
-    int port1 = atoi(argv[1]);
-    int port2 = atoi(argv[2]);
-    int sock1 = startServer(port1);
-    int sock2 = startServer(port2);
-    buf = buf_new(MAX_SIZE_BUFFER);
+
+    int sock = startServer(argv[1]);
+    int n_connections = 0;
+    int connection;
+    struct sockaddr_in client_addr;
+    int len; 
     while (1) {
-    	struct sockaddr_in client;
-    	socklen_t sz = sizeof(client);
-    	int fd1 = accept(sock1, (struct sockaddr*)&client, &sz);
-    	int fd2 = accept(sock2, (struct sockaddr*)&client, &sz);
-        int pipef[2];
-        int proc = fork();
-        if (proc == 0) {
-            close(sock1);
-            close(sock2);
-            pipedWrite(fd1, fd2);
-            return 0;
-        } else {
-            proc = fork();
-            if (proc == 0) {
-                close(sock1);
-                close(sock2);
-                pipedWrite(fd2, fd1);
-                return 0;
-            } else {
-                close(fd1);
-                close(fd2);
-            }
+        if ((connection = accept(sock, (struct sockaddr *)&client_addr, &len)) < 0) {
+            return -1;
         }
+        n_connections++;
+        char buffer[1024];
+        time_t tick = time(NULL);
+        sprintf(buffer, "connection is %d\n time: %.24s\n", n_connections, ctime(&tick));
+        send(connection, buffer, 1025, 0);
+        close(connection);
     }
-    close(sock1);
-    close(sock2);
-    int error = 0;
-    while (1) {
-        int status = 0;
-        pid_t done = wait(&status);
-        if (done == -1 && errno == ECHILD) break;
-        else if (WEXITSTATUS(status) != 0)
-            error = 1;
-    }
-    printf("error = %d\n", error);
+
+    close(sock);
+
     return 0;
 }
